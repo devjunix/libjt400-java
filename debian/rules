@@ -1,0 +1,14 @@
+#!/usr/bin/make -f
+#export DH_VERBOSE = 1
+
+JAVA_HOME=/usr/lib/jvm/default-java
+BUILDIR=$(PWD)/jtopen_build
+
+%:
+	dh $@ --with javahelper
+
+override_dh_auto_build:
+	ant -Dbuild=$(BUILDIR) -Dsourceroot=$(PWD) -Djdk14=$(JAVA_HOME) jar-jt400
+
+override_dh_auto_clean:
+	ant -Dbuild=$(BUILDIR) clean

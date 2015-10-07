@@ -1,0 +1,9 @@
+libjt400-java (8.6-1) unstable; urgency=low
+  TODO:
+	- check how to build, possibly jdk1.7 is not supported.
+          run temporarily -Djdk14=$(JAVA_HOME)
+        - this file is causing FTBFS when run twice:
+          src/com/ibm/as400/access/Copyright.java
+  * Initial release (Closes: #720027)
+
+ -- Julián Moreno Patiño <julian@debian.org>  Mon, 28 Sep 2015 15:04:24 -0500

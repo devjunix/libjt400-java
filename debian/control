@@ -1,0 +1,20 @@
+Source: libjt400-java
+Section: java
+Priority: optional
+Maintainer: Debian Java Maintainers <pkg-java-maintainers@lists.alioth.debian.org>
+Uploaders: Julián Moreno Patiño <julian@debian.org>
+Build-Depends: debhelper (>= 9), javahelper (>= 0.25)
+Build-Depends-Indep: default-jdk, ant, libservlet3.0-java
+Standards-Version: 3.9.6
+Homepage: http://jt400.sourceforge.net/
+
+Package: libjt400-java
+Architecture: all
+Depends: ${java:Depends}, ${misc:Depends}
+Description: Java library that provides access and management to IBM i systems
+ This library provides support for DB2 Database, Integrated File System,
+ Program calls, Commands, Data queues, Data areas, Print/spool resources,
+ Product and PTF information, Jobs and job logs, Messages, Message queues,
+ Message files, Users and groups, User spaces, System values, System status
+ in IBM i systems.
+ 

@@ -1,0 +1,14 @@
+Description: Change Servlets path to get built
+Author: Julián Moreno Patiño <julian@debian.org>
+Last-Update: <2015-10-07>
+--- a/build.xml
++++ b/build.xml
+@@ -679,7 +679,7 @@
+ 		<mkdir dir="${bin}"/>
+ 
+ 		<condition property="servletJarExists">
+-			<available file="${include}/servlet.jar" type="file"/>
++			<available file="/usr/share/java/servlet-api-3.0.jar" type="file"/>
+ 		</condition>
+ 
+ 		<condition property="midpapiJarExists">
