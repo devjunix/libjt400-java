@@ -1,1 +1,2 @@
 fix-servlets-path.diff
+01-use-debian-jars.patch

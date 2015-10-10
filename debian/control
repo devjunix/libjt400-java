@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Debian Java Maintainers <pkg-java-maintainers@lists.alioth.debian.org>
 Uploaders: Julián Moreno Patiño <julian@debian.org>
 Build-Depends: debhelper (>= 9), javahelper (>= 0.25)
-Build-Depends-Indep: default-jdk, ant, libservlet3.0-java
+Build-Depends-Indep: default-jdk, ant, libservlet2.5-java
 Standards-Version: 3.9.6
 Homepage: http://jt400.sourceforge.net/
 

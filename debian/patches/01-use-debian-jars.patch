@@ -1,0 +1,50 @@
+Description: <short summary of the patch>
+ TODO: Put a short summary on the line above and replace this paragraph
+ with a longer explanation of this change. Complete the meta-information
+ with other relevant fields (see below for details). To make it easier, the
+ information below has been extracted from the changelog. Adjust it or drop
+ it.
+ .
+ libjt400-java (8.6-1) unstable; urgency=low
+ .
+   TODO:
+           run temporarily -Djdk14=$(JAVA_HOME)
+         - this file is causing FTBFS when run twice:
+           src/com/ibm/as400/access/Copyright.java
+   * Initial release (Closes: #720027)
+Author: Julián Moreno Patiño <julian@debian.org>
+Bug-Debian: https://bugs.debian.org/720027
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: <YYYY-MM-DD>
+
+--- libjt400-java-8.6.orig/build.xml
++++ libjt400-java-8.6/build.xml
+@@ -541,7 +541,7 @@
+     	   executable="${jdk14}/bin/javac" >
+ 			<classpath>
+ 				<pathelement path="${include}"/>
+-				<pathelement location="${include}/servlet.jar"/>
++				<pathelement location="/usr/share/java/servlet-api-2.5.jar"/>
+ 				<!-- Need the JSDK classes to compile the com.ibm.as400.util.servlet package. -->
+ 				<pathelement location="${include}/jui400.jar"/>
+ 				<!-- Need this for the AS400JDBCDataSourcePane in the com.ibm.as400.vaccess package. -->
+@@ -679,7 +679,7 @@
+ 		<mkdir dir="${bin}"/>
+ 
+ 		<condition property="servletJarExists">
+-			<available file="/usr/share/java/servlet-api-3.0.jar" type="file"/>
++			<available file="/usr/share/java/servlet-api-2.5.jar" type="file"/>
+ 		</condition>
+ 
+ 		<condition property="midpapiJarExists">

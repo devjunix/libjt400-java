@@ -1,4 +1,5 @@
 libjt400-java (8.6-1) unstable; urgency=low
+
   TODO:
 	- check how to build, possibly jdk1.7 is not supported.
           run temporarily -Djdk14=$(JAVA_HOME)
