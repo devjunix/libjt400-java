@@ -43,7 +43,7 @@ Last-Update: <YYYY-MM-DD>
  		<mkdir dir="${bin}"/>
  
  		<condition property="servletJarExists">
--			<available file="/usr/share/java/servlet-api-3.0.jar" type="file"/>
+-			<available file="${include}/servlet.jar" type="file"/>
 +			<available file="/usr/share/java/servlet-api-2.5.jar" type="file"/>
  		</condition>
  
