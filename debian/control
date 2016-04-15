@@ -17,3 +17,10 @@ Description: Java library that provides access and management to IBM i systems
  Product and PTF information, Jobs and job logs, Messages, Message queues,
  Message files, Users and groups, User spaces, System values, System status
  in IBM i systems.
+ .
+ Sources are provided by the JTOpen project, which is the open source 
+ version of the IBM Toolbox for Java licensed program product.
+ .
+ This version of JTOpen does not include UI stuff, as these depend on the
+ library jui400.jar whose source is currently not open.
+

@@ -12,16 +12,23 @@ override_dh_auto_build:
 	cd build && javac -cp /usr/share/java/ant.jar *.java
 	#link required libraries
 	ln -s /usr/share/java/servlet-api-2.5.jar include/servlet.jar
-	#remove non-free code (because we don't have jtui400.jar)
+	#remove non-free code (becallause we don't have jtui400.jar)
 	rm -rf */com/ibm/as400/vaccess
 	rm -rf */utilities/VRunJavaApplication.java
 	rm -rf */com/ibm/as400/util/commtrace/*
 	#run ant
-	ant -lib .:./build jar-jt4008 -Dbuild=. -Djdk18=/usr
+	ant -lib .:./build jar8 -Dbuild=. -Djdk18=/usr
 
 override_dh_auto_install:
 	mkdir -p debian/$(PKG)/usr/share/java
-	cp dist8/jt400.jar debian/$(PKG)/usr/share/java/jt400.jar
+	cp dist8/jt400.jar debian/$(PKG)/usr/share/java/jt400-$(VERSION).jar
+	cp dist8/jt400Native.jar debian/$(PKG)/usr/share/java/jt400Native-$(VERSION).jar
+	cp dist8/jt400Proxy.jar debian/$(PKG)/usr/share/java/jt400Proxy-$(VERSION).jar
+	cp dist8/jt400Servlet.jar debian/$(PKG)/usr/share/java/jt400Servlet-$(VERSION).jar
+	cd debian/$(PKG)/usr/share/java && ln -s jt400-$(VERSION).jar jt400.jar
+	cd debian/$(PKG)/usr/share/java && ln -s jt400Native-$(VERSION).jar jt400Native.jar
+	cd debian/$(PKG)/usr/share/java && ln -s jt400Servlet-$(VERSION).jar jt400Servlet.jar
+	cd debian/$(PKG)/usr/share/java && ln -s jt400Proxy-$(VERSION).jar jt400Proxy.jar
 
 override_dh_auto_clean:
 	#this is not enough :( as ant modifies sources
