@@ -62,7 +62,7 @@ extends SQLDataBase
     //                                                         //
     //---------------------------------------------------------//
 
-    public void convertFromRawBytes(byte[] rawBytes, int offset, ConvTable ccsidConverter) //@P0C
+    public void convertFromRawBytes(byte[] rawBytes, int offset, ConvTable ccsidConverter, boolean ignoreConversionErrors) //@P0C
     throws SQLException
     {
         value_ = (byte[])typeConverter_.toObject(rawBytes, offset);
@@ -322,7 +322,7 @@ extends SQLDataBase
     public String getLocalName()
     {
         // Use "CHAR" not "BINARY".  See ODBC SQLGetTypeInfo().
-        return "CHAR() FOR BIT DATA";   //@KKB changed from CHAR
+        return "CHAR () FOR BIT DATA";   //@KKB changed from CHAR
     }
 
     public int getMaximumPrecision()
@@ -367,7 +367,7 @@ extends SQLDataBase
 
     public String getTypeName()
     {
-        return "CHAR() FOR BIT DATA";
+        return "CHAR () FOR BIT DATA";
     }
 
     public boolean isSigned()

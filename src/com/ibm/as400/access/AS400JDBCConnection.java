@@ -255,6 +255,8 @@ implements Connection
     private String clientAccounting_ = ""; //@pdc
     private String clientProgramID_ = ""; //@pdc
 
+    private String ignoreWarnings_ = "";             /*@Q1A*/
+    
     private int concurrentAccessResolution_ = AS400JDBCDataSource.CONCURRENTACCESS_NOT_SET; //@cc1
 
 	private boolean doUpdateDeleteBlocking_ = false;                                   //@A2A
@@ -272,7 +274,9 @@ implements Connection
 
   // what should truncated query parameters be replaced with
   // null means that truncated query parameter should not be replaced
-   String queryReplaceTruncatedParameter_ = null ; 
+   String queryReplaceTruncatedParameter_ = null ;
+
+   String lastServerSQLState_;   // Remember the state associated with the connection @Q4A
 
     /**
     Static initializer.  Initializes the reply data streams
@@ -1799,10 +1803,14 @@ void handleAbort() {
     void postWarning (SQLWarning sqlWarning)
     throws SQLException // @EGA
     {
+      String sqlState = sqlWarning.getSQLState(); 
+      if( !ignoreWarning(sqlState ))  {         /*@Q1A*/
+
         if (sqlWarning_ == null)
             sqlWarning_ = sqlWarning;
         else
             sqlWarning_.setNextWarning (sqlWarning);
+      }                /*@Q1A*/
     }
 
 
@@ -2982,7 +2990,7 @@ void handleAbort() {
 
                 reply = (DBReplyRequestedDS)server_.sendAndReceive(actualRequest);          // @E5C @F7M
                 //@P0D requestPending_.clear(id);
-//@P1D                requestPending_[id] = false; //@P0A @F7M
+                //@P1D                requestPending_[id] = false; //@P0A @F7M
             }                                                                               // @E5A
 
             reply.parse(dataCompression_);                                                  // @E5A
@@ -3002,12 +3010,31 @@ void handleAbort() {
         catch (IOException e)
         {                                             // @J5A
             server_ = null;                                                  // @J5A
+            if (Trace.isTraceErrorOn()) {
+              Trace.log(Trace.ERROR, "Communication Link Failure "); 
+              Trace.log(Trace.ERROR, e);
+              Trace.log(Trace.ERROR, "Server job is "+serverJobIdentifier_); 
+              if (request != null && request.data_ != null ) {
+                Trace.log(Trace.ERROR,"Request bytes", request.data_); 
+              }
+            }            
             //@P0D request.freeCommunicationsBuffer();                              // @J5A
             JDError.throwSQLException (this, JDError.EXC_COMMUNICATION_LINK_FAILURE, e); // @J5A
         }                                                                   // @J5A
         catch (Exception e)
         {
             //@P0D request.freeCommunicationsBuffer();                              // @EMa
+            if (Trace.isTraceErrorOn()) {
+              Trace.log(Trace.ERROR, "Unexpected exception "); 
+              Trace.log(Trace.ERROR, e);
+              Trace.log(Trace.ERROR, "Server job is "+serverJobIdentifier_); 
+              if (request != null && request.data_ != null ) {
+                Trace.log(Trace.ERROR,"Request bytes", request.data_); 
+              }
+            } else if (JDTrace.isTraceOn()) {
+              JDTrace.logException(this, "Unexpected exception", e); 
+              JDTrace.logInformation(this, "Server job is "+serverJobIdentifier_);
+            }
             JDError.throwSQLException (this, JDError.EXC_INTERNAL, e);
         }
 
@@ -3380,6 +3407,17 @@ void handleAbort() {
         setProperties(dataSourceUrl, properties, as400, false);
     }
 
+    /* Should the warning be ignored  @Q1A*/
+    boolean ignoreWarning(String sqlState) { 
+      if (ignoreWarnings_.indexOf(sqlState ) >= 0) {
+        return true; 
+      } else { 
+        return false; 
+      }
+    }
+    boolean ignoreWarning(SQLWarning warning) { 
+      return ignoreWarning(warning.getSQLState());
+    }
     //@A3A - This logic formerly resided in the ctor.
     void setProperties (JDDataSourceURL dataSourceUrl, JDProperties properties, AS400Impl as400, boolean newServer)
     throws SQLException
@@ -3390,6 +3428,10 @@ void handleAbort() {
         dataSourceUrl_          = dataSourceUrl;
         extendedFormats_        = false;
         properties_             = properties;
+        
+        
+        ignoreWarnings_ = properties_.getString(JDProperties.IGNORE_WARNINGS).toUpperCase();    /*@Q1A*/
+        
         //Set the real default for METADATA SOURCE property since we now know the hostsrvr version
         if(properties_.getString(JDProperties.METADATA_SOURCE).equals(JDProperties.METADATA_SOURCE_HOST_VERSION_DEFAULT))   //@mdsp
         {                                                                                                                   //@mdsp

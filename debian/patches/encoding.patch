@@ -1,0 +1,22 @@
+--- a/build.xml
++++ b/build.xml
+@@ -1173,7 +1173,8 @@
+ 	             link="${doclink}"
+ 	             failonerror="true"
+ 	             additionalparam="-breakiterator"
+-	    	     executable="${javadoc6Exec}">
++	    	     executable="${javadoc6Exec}"
++		encoding="ISO-8859-1">
+ 			<classpath>
+ 				<!-- Include these if the user happens to have them, just so
+ 	             javadoc generates without any extra warnings. -->
+@@ -1208,7 +1209,8 @@
+ 	             link="${doclink}"
+ 	             failonerror="true"
+ 	             additionalparam="-breakiterator"
+-	    	     executable="${javadoc8Exec}">
++	    	     executable="${javadoc8Exec}"
++		encoding="ISO-8859-1">
+ 			<classpath>
+ 				<!-- Include these if the user happens to have them, just so
+ 	             javadoc generates without any extra warnings. -->

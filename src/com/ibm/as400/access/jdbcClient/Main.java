@@ -16,6 +16,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -69,7 +70,9 @@ public class Main implements Runnable {
                                           };
 
   public static String promptString = ">";
-  public static String usage = "Usage:  java com.ibm.as400.access.jdbcClient.Main <jdbcUrl> <userid> <password>";
+  public static String usage = 
+      "Usage:  java -cp jt400.jar  com.ibm.as400.access.jdbcClient.Main <jdbcUrl> <userid> <password>\n"+
+      "        java -jar jt400.jar <jdbcUrl> <userid> <password>" ;
 
   public static String[] commandHelp = {
       "com.ibm.as400.access.jdbcClient.Main executes SQL commands using a JDBC connection.  ",
@@ -164,7 +167,7 @@ public class Main implements Runnable {
 
       "!CALLMETHOD [METHODCALL]          Calls a method on a variable",
       "  Hint:  To see a result set use CALLMETHOD com.ibm.as400.access.jdbcClient.Main.dispResultSet(RS)",
-      "  Hint:  To access an array use SET LIST=java.util.Arrays.asList(ARRAYVARIABLE)",
+      "  Hint:  To access an array use  SETVAR LIST=java.util.Arrays.asList(ARRAYVARIABLE)",
       "",
       "!THREAD [COMMAND]                 Runs a command in its own thread.",
       "!THREADPERSIST [THREADNAME]       Create a thread that persist.",
@@ -306,6 +309,91 @@ public class Main implements Runnable {
     initializeDefaults();
   }
 
+  /*@Q7A -- added to support unicode escape syntax in SQL Statements */ 
+  public static String readLine(BufferedReader input) throws SQLException { 
+    String result = null; 
+    
+    try {
+      result = input.readLine();
+    if (result != null) { 
+        if (result.indexOf("\\u") >= 0) {
+          int resultLen = result.length();
+          StringBuffer sb = new StringBuffer();
+          int startIndex = 0;
+          int escapeIndex = result.indexOf("\\u", startIndex);
+          while (escapeIndex >= 0) {
+            sb.append(result.substring(startIndex, escapeIndex));
+            if (escapeIndex + 6 <= resultLen) {
+              try {
+                sb.append(getUnicodeCharacter(result, escapeIndex + 2));
+              } catch (SQLException ioEx) {
+                throw new SQLException("Escape sequence '"
+                    + result.substring(escapeIndex, 6) + "' invalid");
+              }
+            } else {
+              throw new SQLException("Escape sequence '"
+                  + result.substring(escapeIndex) + "' invalid");
+            }
+            startIndex = escapeIndex + 6;
+            if (startIndex > resultLen) {
+              escapeIndex = -1;
+            } else {
+              escapeIndex = result.indexOf(result, startIndex);
+            }
+          }
+          sb.append(result.substring(startIndex));
+          result = sb.toString();
+        }
+      }
+    } catch (IOException e) {
+      SQLException sqlex = new SQLException("IO Exception");
+      sqlex.initCause(e);
+      throw sqlex;
+    }
+    return result;
+  }
+  
+  private static char getUnicodeCharacter(String result, int index) throws SQLException {
+    int c = 0; 
+    for (int i = 0; i < 4; i++) { 
+       char digit = result.charAt(index+i); 
+       c = c * 16 + hexValue(digit); 
+    }
+    return (char) c;
+  }
+
+  private static int hexValue(char digit) throws SQLException {
+      switch(digit) {
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+        return  digit - '0'; 
+      case 'a':
+      case 'b':
+      case 'c':
+      case 'd':
+      case 'e':
+      case 'f':
+        return 10 + digit - 'a'; 
+      case 'A':
+      case 'B':
+      case 'C':
+      case 'D':
+      case 'E':
+      case 'F':
+        return 10 + digit - 'A'; 
+        
+      }
+      throw new SQLException("invalid escape digit '"+digit+"'"); 
+  }
+
   public int go(InputStream in, PrintStream out1) {
     int rc = 0;
     boolean running = true;
@@ -315,7 +403,7 @@ public class Main implements Runnable {
       BufferedReader input = new BufferedReader(new InputStreamReader(in));
       if (prompt_)
         out1.print(promptString);
-      query = input.readLine();
+      query = readLine(input);
       /* if we happen to get no input */ 
       if (query == null) running = false; 
       while (running) {
@@ -323,7 +411,7 @@ public class Main implements Runnable {
         if (running) {
           if (prompt_)
             out1.print(promptString);
-          query = input.readLine();
+          query = readLine(input);
           if (query != null) {
             query = query.trim();
           } else {
@@ -640,7 +728,7 @@ public class Main implements Runnable {
         manualResultSet_ = rs;
         addVariable("RS", manualResultSet_);
         manualResultSetColumnLabel_ = dispColumnHeadings(out1, rs, rsmd,
-            false, manualResultSetNumCols_, html_, xml_ );
+            false, manualResultSetNumCols_, html_, xml_,showMixedUX_ ); //@Q9C
       } else {
         dispResultSet(out1, rs, false);
         // Display any warnings
@@ -897,7 +985,7 @@ public class Main implements Runnable {
             manualResultSet_ = rs;
             addVariable("RS", manualResultSet_);
             manualResultSetColumnLabel_ = dispColumnHeadings(out1, rs,
-                rsmd, false, manualResultSetNumCols_, html_, xml_);
+                rsmd, false, manualResultSetNumCols_, html_, xml_,showMixedUX_);  //@Q9C
           } else {
 
             dispResultSet(out1, rs, false);
@@ -1270,7 +1358,7 @@ public class Main implements Runnable {
             manualResultSet_ = rs;
             addVariable("RS", manualResultSet_);
             manualResultSetColumnLabel_ = dispColumnHeadings(out1, rs, rsmd,
-                false, manualResultSetNumCols_, html_, xml_);
+                false, manualResultSetNumCols_, html_, xml_,showMixedUX_);  //@Q9C
           } else {
 
             // Display all columns and rows from the result set
@@ -1867,7 +1955,7 @@ public class Main implements Runnable {
                 manualResultSet_ = rs;
                 addVariable("RS", manualResultSet_);
                 manualResultSetColumnLabel_ = dispColumnHeadings(out1, rs,
-                    rsmd, false, manualResultSetNumCols_, html_, xml_);
+                    rsmd, false, manualResultSetNumCols_, html_, xml_,showMixedUX_);   //@Q9C
               } else {
 
                 dispResultSet(out1, rs, false);
@@ -2495,32 +2583,34 @@ public class Main implements Runnable {
         t.start();
         threads_.add(t);
       } else if (upcaseCommand.startsWith("THREADPERSIST ")) {
-	  history.addElement(command_);
-	  String threadName = command_.substring(14).trim();
-	  out_.println("Starting thread "+threadName);
-	  String newcommand = "PERSIST"; 
-	  Main runnable = new Main(this,  newcommand, out_);
-	  variables.put(threadName, runnable); 
-	  Thread t = new Thread(runnable);
-	  t.setName(threadName); 
-	  t.setDaemon(true); 
-	  t.start();
+        history.addElement("!" + command1);
+        String threadName = command1.substring(14).trim();
+        out1.println("Starting runnable " + threadName);
+        String newcommand = "PERSIST";
+        Main runnable = new Main(this, newcommand, out1);
+        variables.put(threadName, runnable);
+        Thread t = new Thread(runnable);
+        t.setName(threadName);
+        t.setDaemon(true);
+        t.start();
+        out1.println("Started thread " + threadName+"-T");
+        variables.put(threadName+"-T", t); 
       } else if (upcaseCommand.startsWith("THREADEXEC ")) {
-	  history.addElement(command_);
-	  String remaining = command_.substring(11).trim();
-	  int spaceIndex = remaining.indexOf(' ');
-	  if (spaceIndex > 0) {
-	      String threadName = remaining.substring(0,spaceIndex);
-	      String threadCommand = remaining.substring(spaceIndex+1); 
-	      Main runnable = (Main) variables.get(threadName);
-	      if (runnable != null) {
-		  runnable.setCommand(threadCommand); 
-	      } else {
-		  out_.println("ERROR: Unable to find thread "+threadName); 
-	      } 
-	  } else {
-	      out_.println("ERROR:  THREADEXEC: no space after thread name"); 
-	  } 
+        history.addElement("!" + command1);
+        String remaining = command1.substring(11).trim();
+        int spaceIndex = remaining.indexOf(' ');
+        if (spaceIndex > 0) {
+          String threadName = remaining.substring(0, spaceIndex);
+          String threadCommand = remaining.substring(spaceIndex + 1);
+          Main runnable = (Main) variables.get(threadName);
+          if (runnable != null) {
+            runnable.setCommand(threadCommand);
+          } else {
+            out1.println("ERROR: Unable to find thread " + threadName);
+          }
+        } else {
+          out1.println("ERROR:  THREADEXEC: no space after thread name");
+        }
       } else if (upcaseCommand.startsWith("REPEAT ")) {
         history.addElement("!"+command1);
         String left = command1.substring(7).trim();
@@ -3044,7 +3134,7 @@ public class Main implements Runnable {
               String argsLeft = left;
               Object[] parameters = new Object[parameterTypes.length];
               methodFound = true;
-              String methodParameters = "";
+              String methodParameters = "(";
               for (int p = 0; p < parameterTypes.length; p++) {
                 // out1.println("Args left is "+argsLeft);
                 // Handle double quote delimited parameters strings
@@ -3086,6 +3176,11 @@ public class Main implements Runnable {
                   //
                   // If the arg refers to a variable try to use it
                   //
+                  
+                  String parameterTypeName = parameterTypes[p].getName();
+                  if (p > 0) methodParameters +=",";
+                  methodParameters += parameterTypeName ;
+
                   Object argObject = variables.get(arg);
                   if (argObject != null) {
                     parameters[p] = argObject;
@@ -3094,8 +3189,7 @@ public class Main implements Runnable {
                     //
                     // Now convert the arg from a string into something else
                     //
-                    String parameterTypeName = parameterTypes[p].getName();
-                    methodParameters += parameterTypeName + " ";
+
                     if (arg.equals("null")) {
                       parameters[p] = null;
                     } else if (parameterTypeName.equals("java.lang.String")) {
@@ -3219,6 +3313,7 @@ public class Main implements Runnable {
                   } /* parameter was not a variable */
                 } /* unable to find args */
               } /* looping through parameter types */
+              methodParameters+=")"; 
               if (methodFound) {
                 if ((argsLeft.trim().equals(")"))
                     || (argsLeft.trim().length() == 0)) {
@@ -3226,6 +3321,12 @@ public class Main implements Runnable {
                     variable = constructors[m].newInstance(parameters);
                   } catch (Exception e) {
                     e.printStackTrace(out1);
+                    Throwable t = e.getCause(); 
+                    while ( t != null) {
+                      out1.println("..Caused by\n"); 
+                      t.printStackTrace(out1); 
+                      t = t.getCause(); 
+                    }
                     out1.println("Creating object  with "
                         + methodParameters + " failed");
                     methodFound = false;
@@ -3317,7 +3418,7 @@ public class Main implements Runnable {
 
 
   static private String[] dispColumnHeadings(PrintStream out1, ResultSet rs,
-      ResultSetMetaData rsmd, boolean trim, int numCols, boolean html, boolean xml) throws SQLException {
+      ResultSetMetaData rsmd, boolean trim, int numCols, boolean html, boolean xml, boolean showMixedUX) throws SQLException {   //@Q9C
     int i;
     // Display column headings
 
@@ -3338,7 +3439,8 @@ public class Main implements Runnable {
         if (!xml) {
           if (i > 1)
             output.append(",");
-          output.append(columnLabel[i]);
+          appendUnicodeString(output, columnLabel[i], 65535, 65535, true, showMixedUX);   //@Q9C
+
         }
       }
     }
@@ -3554,7 +3656,7 @@ public class Main implements Runnable {
 
     int numCols = rsmd.getColumnCount();
 
-    String[] columnLabel = dispColumnHeadings(out1, rs, rsmd, trim, numCols, xml, html);
+    String[] columnLabel = dispColumnHeadings(out1, rs, rsmd, trim, numCols, xml, html,showMixedUX);      //@Q9C
 
     //
     // figure out column types

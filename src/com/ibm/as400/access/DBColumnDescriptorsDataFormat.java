@@ -36,15 +36,33 @@ class DBColumnDescriptorsDataFormat
     // a column label from the system.
     private String                 columnLabel_;  
     private int                     jobCCSID_;                  // Fix for JTOpen Bug 4034
-
+    BidiConversionProperties bidiConversionProperties_ = null;  // @Q8A Bidi Conversion properties
 
     /**
     Constructs a DBColumnDescriptorsDataFormat object.  Use this when overlaying
     on a reply datastream.  The cached data will be set when overlay()
     is called.
     **/
-    DBColumnDescriptorsDataFormat()                              
-    {                                            
+    DBColumnDescriptorsDataFormat(SQLConversionSettings settings)      /*@Q8C*/                        
+    {       
+    	/*@Q8A*/ 
+      int bidiStringType = BidiStringType.ST5;       /*@Q8C*/ 
+      boolean bidiImplicitReordering = true;
+      boolean bidiNumericOrdering = false ;
+      if (settings != null) { 
+         bidiStringType = settings.getBidiStringType();
+        
+         // if bidiStringType is not set by user, use the default 5
+         if(bidiStringType == -1)
+             bidiStringType = BidiStringType.ST5;
+
+         bidiImplicitReordering = settings.getBidiImplicitReordering();
+         bidiNumericOrdering = settings.getBidiNumericOrdering();
+      }
+      bidiConversionProperties_ = new BidiConversionProperties(bidiStringType);  
+      bidiConversionProperties_.setBidiImplicitReordering(bidiImplicitReordering);        
+      bidiConversionProperties_.setBidiNumericOrderingRoundTrip(bidiNumericOrdering);      
+      
     }
 
     // Fix for JTOpen Bug 4034
@@ -53,10 +71,13 @@ class DBColumnDescriptorsDataFormat
     on a reply datastream.  The cached data will be set when overlay()
     is called.
     @param jobCCSID The ccsid of the server job.
+    @param settings The conversion settings used when converting the column names
     **/
-    DBColumnDescriptorsDataFormat(int jobCCSID)                              
-    {                                            
+    DBColumnDescriptorsDataFormat(int jobCCSID, SQLConversionSettings settings) //@Q8C                              
+    {       
+        this(settings); 
         jobCCSID_ = jobCCSID;
+
     }
 
     /**
@@ -98,7 +119,8 @@ class DBColumnDescriptorsDataFormat
                 {
                     columnLabel_ = (ConvTable.getTable(ccsid, null)).byteArrayToString(rawBytes, 
                                                                                        offset + 8, 
-                                                                                       length-8);
+                                                                                       length-8,
+                                                                                       bidiConversionProperties_);  //@Q8C
                 }
                 catch (UnsupportedEncodingException e)
                 {
@@ -126,7 +148,7 @@ class DBColumnDescriptorsDataFormat
         //We don't have to be returned a baseColumnName by the system, depending on the query
         if (baseColumnName_ != null)
         {
-            return convTable.byteArrayToString (baseColumnName_, 0, baseColumnName_.length);
+             return convTable.byteArrayToString (baseColumnName_, 0, baseColumnName_.length, bidiConversionProperties_); //@Q8C
         }
         else
             return null;
@@ -139,7 +161,7 @@ class DBColumnDescriptorsDataFormat
         //We don't have to be returned a baseTableName by the system, depending on the query
         if (baseTableName_ != null)
         {
-            return convTable.byteArrayToString (baseTableName_, 0, baseTableName_.length);
+            return convTable.byteArrayToString (baseTableName_, 0, baseTableName_.length, bidiConversionProperties_); //@Q8C
         }
         else
             return null;
@@ -153,7 +175,7 @@ class DBColumnDescriptorsDataFormat
         if (baseTableSchemaName_ != null)
         {
             return convTable.byteArrayToString (baseTableSchemaName_, 0, 
-                                                baseTableSchemaName_.length);
+                                                baseTableSchemaName_.length,bidiConversionProperties_); //@Q8C
         }
         else
             return null;

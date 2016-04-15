@@ -1,1 +1,3 @@
-fix-servlets-path.diff
+remove-sun-io.patch
+bug-jdk6and8.patch
+encoding.patch

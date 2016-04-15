@@ -89,7 +89,7 @@ class DBExtendedColumnDescriptors {
     //@A1D }
 
 
-    public DBColumnDescriptorsDataFormat getColumnDescriptors (int columnIndex)
+    public DBColumnDescriptorsDataFormat getColumnDescriptors (int columnIndex, SQLConversionSettings settings) //@Q8C
     throws SQLException
     {    
         // if variable column info length is 0, then no variable length column information
@@ -97,7 +97,7 @@ class DBExtendedColumnDescriptors {
         int variableColumnInfoLength = getVariableColumnInfoLength(columnIndex);
         if (variableColumnInfoLength > 0) {
             int offsetToDescriptor = getVariableColumnInfoOffset (columnIndex);
-            DBColumnDescriptorsDataFormat columnDescriptorsDataFormat = new DBColumnDescriptorsDataFormat();  
+            DBColumnDescriptorsDataFormat columnDescriptorsDataFormat = new DBColumnDescriptorsDataFormat(settings);  //@Q8C
             columnDescriptorsDataFormat.overlay (data_, ((offset_ - 6) + offsetToDescriptor), variableColumnInfoLength);
             return columnDescriptorsDataFormat;
         }
@@ -106,20 +106,27 @@ class DBExtendedColumnDescriptors {
     }
 
     // Fix for JTOpen Bug 4034 - The CCSID for a column label may be 65535, if that is the case, we want to use the server job's ccsid.
-    public DBColumnDescriptorsDataFormat getColumnDescriptors (int columnIndex, ConvTable convTable)
+    public DBColumnDescriptorsDataFormat getColumnDescriptors (int columnIndex, ConvTable convTable, SQLConversionSettings settings) //@Q8C
     throws SQLException
-    {    
-        // if variable column info length is 0, then no variable length column information
-        // was returned
+    {
+        // If columnIndex < number of columns, we might be using a stale extended descriptor
+        // (due to a bug in ZDA prior to November 2015). 
+        // 
+        if (columnIndex <= getNumberOfColumns()) { 
+          // if variable column info length is 0, then no variable length column information
+          // was returned
         int variableColumnInfoLength = getVariableColumnInfoLength(columnIndex);
         if (variableColumnInfoLength > 0) {
             int offsetToDescriptor = getVariableColumnInfoOffset (columnIndex);
-            DBColumnDescriptorsDataFormat columnDescriptorsDataFormat = new DBColumnDescriptorsDataFormat(convTable.getCcsid());  
+            DBColumnDescriptorsDataFormat columnDescriptorsDataFormat = new DBColumnDescriptorsDataFormat(convTable.getCcsid(), settings);  //@Q8C 
             columnDescriptorsDataFormat.overlay (data_, ((offset_ - 6) + offsetToDescriptor), variableColumnInfoLength);
             return columnDescriptorsDataFormat;
         }
         else
             return null;
+        } else { 
+          return null;   /* Column index > number of columns */ 
+        }
     }
 
 

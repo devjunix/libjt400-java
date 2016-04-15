@@ -43,6 +43,8 @@ final class SQLDBClob extends SQLDataBase
     private String                  value_;
     private Object savedObject_; // This is our byte[] or InputStream or whatever that we save to convert to bytes until we really need to.
 
+    private int ccsid_;  /*@P3A*/
+
     // Note: maxLength is in bytes not counting 2 for LL.
     //
     SQLDBClob(int maxLength, SQLConversionSettings settings)
@@ -55,7 +57,9 @@ final class SQLDBClob extends SQLDataBase
 
     public Object clone()
     {
-        return new SQLDBClob(maxLength_, settings_);
+       SQLDBClob newClob =new SQLDBClob(maxLength_, settings_);
+       newClob.setCcsid(ccsid_);
+        return newClob;
     }
 
     //---------------------------------------------------------//
@@ -64,7 +68,7 @@ final class SQLDBClob extends SQLDataBase
     //                                                         //
     //---------------------------------------------------------//
 
-    public void convertFromRawBytes(byte[] rawBytes, int offset, ConvTable ccsidConverter)
+    public void convertFromRawBytes(byte[] rawBytes, int offset, ConvTable ccsidConverter, boolean ignoreConversionErrors)
     throws SQLException
     {
         length_ = BinaryConverter.byteArrayToInt(rawBytes, offset);
@@ -230,10 +234,14 @@ endif */
 
             // Truncate if necessary.
             int valueLength = value_.length();
-            if(valueLength > maxLength_)
+            // Max length is in bytes. We should truncate
+            // before sending to the server.  Other code 
+            // should have issued the warning for data truncation
+            
+            if(valueLength > maxLength_ / 2)
             {
-                value_ = value_.substring(0, maxLength_);
-                truncated_ = valueLength - maxLength_;
+                value_ = value_.substring(0, maxLength_ / 2);
+                truncated_ = valueLength - maxLength_ / 2;
                 outOfBounds_ = false;
             }
             else
@@ -328,11 +336,24 @@ endif */
 
     public int getType()
     {
+/* ifdef JDBC40 
+      // @P3A
+      if (ccsid_ == 1200 || ccsid_ == 13400) {
+        return java.sql.Types.NCLOB;   
+      }
+endif */       
         return java.sql.Types.CLOB;
     }
 
     public String getTypeName()
     {
+/* ifdef JDBC40 
+      // @P3A
+      if (ccsid_ == 1200 || ccsid_ == 13400) {
+        return "NCLOB";  
+      }
+endif */       
+
         return "DBCLOB";
     }
 
@@ -486,6 +507,13 @@ endif */
     {
         if(savedObject_ != null) doConversion();
         truncated_ = 0; outOfBounds_ = false;
+/* ifdef JDBC40 
+        if (ccsid_ == 1200 || ccsid_ == 13400) {
+           return new AS400JDBCNClob(value_, maxLength_);
+        }
+  endif */       
+        
+        
         return new AS400JDBCClob(value_, maxLength_);
     }
 
@@ -559,6 +587,11 @@ endif */
         if(savedObject_ != null) doConversion();
         truncated_ = 0; outOfBounds_ = false;
         return value_;
+    }
+   
+    /*@P3A*/
+    public void setCcsid(int ccsid) {
+     ccsid_ = ccsid; 
     }
 
     //@pda jdbc40

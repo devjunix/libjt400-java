@@ -68,7 +68,7 @@ extends SQLDataBase implements SQLVariableCompressible /*@N3C*/
     //                                                         //
     //---------------------------------------------------------//
 
-    public void convertFromRawBytes(byte[] rawBytes, int offset, ConvTable ccsidConverter) //@P0C
+    public void convertFromRawBytes(byte[] rawBytes, int offset, ConvTable ccsidConverter, boolean ignoreConversionErrors) //@P0C
     throws SQLException
     {
         length_ = BinaryConverter.byteArrayToUnsignedShort(rawBytes, offset);
@@ -347,7 +347,7 @@ extends SQLDataBase implements SQLVariableCompressible /*@N3C*/
 
     public String getLocalName()
     {
-        return "VARCHAR() FOR BIT DATA";    //@KKB changed from VARCHAR
+        return "VARCHAR () FOR BIT DATA";    //@KKB changed from VARCHAR
     }
 
     public int getMaximumPrecision()
@@ -392,7 +392,7 @@ extends SQLDataBase implements SQLVariableCompressible /*@N3C*/
 
     public String getTypeName()
     {
-        return "VARCHAR() FOR BIT DATA";
+        return "VARCHAR () FOR BIT DATA";
     }
 
     public boolean isSigned()

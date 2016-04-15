@@ -1,0 +1,42 @@
+--- a/build/Jdbc40Task.java
++++ b/build/Jdbc40Task.java
+@@ -278,18 +278,6 @@
+ 
+       if (verbose_) System.out.println("Processed. Time: "+(end-start)+" ms");
+     }
+-    catch (sun.io.MalformedInputException e) {
+-    	System.out.println("MalformedInputException processing "+filename+ " line : "+lineNumber);
+-    	e.printStackTrace(); 
+-    	Throwable cause = e.getCause(); 
+-    	while (cause != null ) { 
+-    		System.out.println("----------caused by --------------------");
+-    		cause.printStackTrace();
+-    		cause = cause.getCause(); 
+-    	}
+-    	throw new BuildException(e); 
+-    	
+-    }
+     catch (Exception e) { 
+     	System.out.println("Exception processing "+filename+ " line : "+lineNumber);
+     	e.printStackTrace(); 
+--- a/build/Jdbc42Task.java
++++ b/build/Jdbc42Task.java
+@@ -340,18 +340,6 @@
+ 
+       if (verbose_) System.out.println("Processed. Time: "+(end-start)+" ms");
+     }
+-    catch (sun.io.MalformedInputException e) {
+-    	System.out.println("MalformedInputException processing "+filename+ " line : "+lineNumber);
+-    	e.printStackTrace(); 
+-    	Throwable cause = e.getCause(); 
+-    	while (cause != null ) { 
+-    		System.out.println("----------caused by --------------------");
+-    		cause.printStackTrace();
+-    		cause = cause.getCause(); 
+-    	}
+-    	throw new BuildException(e); 
+-    	
+-    }
+     catch (Exception e) { 
+     	System.out.println("Exception processing "+filename+ " line : "+lineNumber);
+     	e.printStackTrace(); 

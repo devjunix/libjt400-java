@@ -93,6 +93,14 @@ import java.io.IOException;
  *        System.out.println("Result is: " + i);
  *    }
  </pre>
+  <p>NOTE: There are two ways to run a service program in an iasp. Users can call a service program directly with path prefixed with the iasp information like "/IASP1/QSYS.LIB/MYPGM.LIB/ENTRYPTS.SRVPGM".
+ Users can also call AS400.setIASPGroup to set the asp group information firstly, then call the service program in regular library-qualified object name syntax. The second way is recommended. For example:
+ <pre>
+ *    // Call a service program on system named "Hal" on asp "iasp1"
+ *    AS400 system = new AS400("Hal");
+ *    system.setIASPGroup("iasp1"); //If do not use *CURUSR for current library and library list, call other setIASPGroup interfaces.
+ *    ServiceProgramCall sPGMCall = new ServiceProgramCall(system);
+ *    sPGMCall.setProgram("/QSYS.LIB/MYPGM.LIB/ENTRYPTS.SRVPGM");
  **/
 public class ServiceProgramCall extends ProgramCall
 {
@@ -300,19 +308,30 @@ public class ServiceProgramCall extends ProgramCall
             throw new ExtendedIllegalArgumentException("parameterList.length (" + parameterList_.length + ")", ExtendedIllegalArgumentException.PARAMETER_VALUE_NOT_VALID);
         }
         
-       //@M2A Add support for running program located on IASP and path set starting with iasp name.
+        //@M2A Add support for running program located on IASP and path set starting with iasp name.
+        //@P2C
         String prg = program_.toUpperCase();
         if(!prg.startsWith("/QSYS.LIB")){
           String iasp=prg.substring(1, prg.indexOf("/QSYS.LIB"));
-          try{
-            String SetASPGrp = "SETASPGRP "+ iasp;
-            CommandCall commandCall = new CommandCall(system_);
-            if (commandCall.run(SetASPGrp) != true) {
-              Trace.log(Trace.ERROR, this,"Command SETASPGRP Failed with iasp "+iasp);
-            } 
+          if(!system_.aspName.equalsIgnoreCase(iasp)){
+            try{
+              String SetASPGrp = "SETASPGRP ASPGRP("+ iasp + ") CURLIB(*CURUSR) USRLIBL(*CURUSR)";//@P2C
+
+              CommandCall commandCall = new CommandCall(system_);
+              Job job = commandCall.getServerJob();
+              String currentASP = job.getJobAsp();
+              system_.aspName= currentASP;
+              if(currentASP!=null && !currentASP.equalsIgnoreCase(iasp)){
+                Trace.log(Trace.DIAGNOSTIC,"ServiceProgram call command of setaspgrp "+SetASPGrp);
+                if (commandCall.run(SetASPGrp) != true) {
+                  Trace.log(Trace.ERROR, this,"Command SETASPGRP Failed with iasp "+iasp);
+                } else
+                  system_.aspName= iasp;
+              }
             }catch (Exception e){
               e.printStackTrace();
             }
+          }
         }
 
         chooseImpl();

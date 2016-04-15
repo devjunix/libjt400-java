@@ -32,6 +32,38 @@ class SocketContainerJSSE extends SocketContainer
         if (Trace.isTraceOn()) Trace.log(Trace.DIAGNOSTIC, "SocketContainerJSSE: create SSLSocket");
         SSLSocketFactory sslFactory = (SSLSocketFactory)SSLSocketFactory.getDefault();
         sslSocket_ = (SSLSocket)sslFactory.createSocket(socket, systemName, port, true);
+        //@P4A START
+        if(SecureAS400.changeCipherSuites)
+          try{
+            if (Trace.isTraceOn())
+              Trace.log(Trace.DIAGNOSTIC,"SocketContainerJSSE try to change cipher suites of current connection.");
+            String [] ciphers = sslSocket_.getEnabledCipherSuites();
+            String[] protols = sslSocket_.getEnabledProtocols();
+            if (Trace.isTraceOn()){
+              Trace.log(Trace.DIAGNOSTIC,"SocketContainerJSSE: enabeld SSL version:");
+              for (int i=0;protols!=null && i< protols.length;i++)
+                Trace.log(Trace.DIAGNOSTIC,protols[i]);
+              if(ciphers !=null){
+                Trace.log(Trace.DIAGNOSTIC,"SocketContainerJSSE: cipher suites originally enabled:");
+                for(int i=0;i<ciphers.length;i++){
+                  Trace.log(Trace.DIAGNOSTIC,ciphers[i]);
+                }
+              }
+            }
+            sslSocket_.setEnabledCipherSuites(SecureAS400.newCipherSuites);
+
+            String [] newCiphersEnabled = sslSocket_.getEnabledCipherSuites();
+            if(newCiphersEnabled !=null && (Trace.isTraceOn())){
+              Trace.log(Trace.DIAGNOSTIC,"SocketContainerJSSE: cipher suitesnew enabled:");
+              for(int i=0;i<newCiphersEnabled.length;i++){
+                Trace.log(Trace.DIAGNOSTIC,newCiphersEnabled[i]);
+              }
+            }
+          }catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        //@P4A END
     }
 
     void close() throws IOException
