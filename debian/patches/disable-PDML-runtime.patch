@@ -1,3 +1,9 @@
+Description: Disable PDML runtime, propietary library jui400.jar
+ needed.
+Origin: upstream, http://www-912.ibm.com/j_dir/JTOpen.nsf/8178b1c14b1e9b6b8525624f0062fe9f/176869EA087DECFA86257F9400563508?OpenDocument
+Forwarded: no
+Author: Luca Vercelli <luca.vercelli.to@gmail.com>
+Last-Update: 2016-06-08
 --- a/build.xml
 +++ b/build.xml
 @@ -1291,12 +1291,12 @@
