@@ -1,3 +1,2 @@
-remove-sun-io.patch
-bug-jdk6and8.patch
-encoding.patch
+disable-PDML-runtime.patch
+replace-io-function.patch
