@@ -1291,12 +1291,12 @@
 	<!--///////////////////////////////////////////////////////////////////////////
 	    // Target: pcml
 	    ///////////////////////////////////////////////////////////////////////////-->
-	<target name="pcml6" depends="init,compile">
+	<target name="pcml6" depends="init,compile6">
 		<condition property="pcmlRuntimeExists">
 			<and>
 				<available classname="java.nio.Buffer"/>
 				<!-- JDK 1.4 and higher. -->
-				<available classname="com.ibm.as400.data.ProgramCallDocument" classpath="${output}:${include}:${source}"/>
+				<!--available classname="com.ibm.as400.data.ProgramCallDocument" classpath="${output}:${include}:${source}"/-->
 			</and>
 		</condition>
 		<fail message="Can't find PCML runtime." unless="pcmlRuntimeExists"/>
@@ -1312,12 +1312,12 @@
 	           Need "source" to find the pcml.dtd.  -->
 	</target>
 
-	<target name="pcml8" depends="init,compile">
+	<target name="pcml8" depends="init,compile8">
 		<condition property="pcmlRuntimeExists">
 			<and>
 				<available classname="java.nio.Buffer"/>
 				<!-- JDK 1.4 and higher. -->
-				<available classname="com.ibm.as400.data.ProgramCallDocument" classpath="${output}:${include}:${source}"/>
+				<!--available classname="com.ibm.as400.data.ProgramCallDocument" classpath="${output}:${include}:${source}"/-->
 			</and>
 		</condition>
 		<fail message="Can't find PCML runtime." unless="pcmlRuntimeExists"/>

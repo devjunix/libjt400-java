@@ -1,0 +1,27 @@
+Description: Replace deprecated sun.io.MalformedInputException
+ java function by java.nio.charset.MalformedInputException
+Forwarded: no
+Author: Julián Moreno Patiño <julian@debian.org>
+Last-Update: 2016-06-08
+--- a/build/Jdbc40Task.java
++++ b/build/Jdbc40Task.java
+@@ -278,7 +278,7 @@ public class Jdbc40Task extends MatchingTask
+ 
+       if (verbose_) System.out.println("Processed. Time: "+(end-start)+" ms");
+     }
+-    catch (sun.io.MalformedInputException e) {
++    catch (java.nio.charset.MalformedInputException e) {
+     	System.out.println("MalformedInputException processing "+filename+ " line : "+lineNumber);
+     	e.printStackTrace(); 
+     	Throwable cause = e.getCause(); 
+--- a/build/Jdbc42Task.java
++++ b/build/Jdbc42Task.java
+@@ -340,7 +340,7 @@ public class Jdbc42Task extends MatchingTask
+ 
+       if (verbose_) System.out.println("Processed. Time: "+(end-start)+" ms");
+     }
+-    catch (sun.io.MalformedInputException e) {
++    catch (java.nio.charset.MalformedInputException e) {
+     	System.out.println("MalformedInputException processing "+filename+ " line : "+lineNumber);
+     	e.printStackTrace(); 
+     	Throwable cause = e.getCause(); 

@@ -1,39 +1,29 @@
 #!/usr/bin/make -f
 #export DH_VERBOSE=1
 
-PKG := $(strip $(shell egrep '^Source: ' debian/control | cut -f 2 -d ':'))
 VERSION := $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f 2 -d ' ' | sed 's/-[0-9]*//')
 
 %:
 	dh $@ --with javahelper
 
+override_dh_auto_clean:
+	ant -Dbuild=. clean
+	#remove files not cleaned by ant
+	rm -rf include/servlet.jar java8/ jdbc42/
+	#remove code that depend of non-free code (because we don't have jui400.jar)
+	rm -rf */com/ibm/as400/vaccess
+	rm -rf */utilities/VRunJavaApplication.java
+	rm -rf */com/ibm/as400/util/commtrace/*
+	# remove precompiled java files
+	find . -iname '*.class' -delete
+
 override_dh_auto_build:
 	#this build the ant task required by ant
 	cd build && javac -cp /usr/share/java/ant.jar *.java
 	#link required libraries
-	ln -s /usr/share/java/servlet-api-2.5.jar include/servlet.jar
-	#remove non-free code (becallause we don't have jtui400.jar)
-	rm -rf */com/ibm/as400/vaccess
-	rm -rf */utilities/VRunJavaApplication.java
-	rm -rf */com/ibm/as400/util/commtrace/*
+	ln -s /usr/share/java/servlet-api-3.1.jar include/servlet.jar
 	#run ant
 	ant -lib .:./build jar8 -Dbuild=. -Djdk18=/usr
-
-override_dh_auto_install:
-	mkdir -p debian/$(PKG)/usr/share/java
-	cp dist8/jt400.jar debian/$(PKG)/usr/share/java/jt400-$(VERSION).jar
-	cp dist8/jt400Native.jar debian/$(PKG)/usr/share/java/jt400Native-$(VERSION).jar
-	cp dist8/jt400Proxy.jar debian/$(PKG)/usr/share/java/jt400Proxy-$(VERSION).jar
-	cp dist8/jt400Servlet.jar debian/$(PKG)/usr/share/java/jt400Servlet-$(VERSION).jar
-	cd debian/$(PKG)/usr/share/java && ln -s jt400-$(VERSION).jar jt400.jar
-	cd debian/$(PKG)/usr/share/java && ln -s jt400Native-$(VERSION).jar jt400Native.jar
-	cd debian/$(PKG)/usr/share/java && ln -s jt400Servlet-$(VERSION).jar jt400Servlet.jar
-	cd debian/$(PKG)/usr/share/java && ln -s jt400Proxy-$(VERSION).jar jt400Proxy.jar
-
-override_dh_auto_clean:
-	#this is not enough :( as ant modifies sources
-	find . -iname '*.class' -delete
-	ant -Dbuild=. clean
 
 get-orig-source:
 	uscan --repack --rename --force-download --compression=xz \
